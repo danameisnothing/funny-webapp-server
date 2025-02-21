@@ -1,0 +1,24 @@
+# Spacefile Docs: https://go.deta.dev/docs/spacefile/v0
+# I got the commands from their Discord lol (https://discord.com/channels/827546555200438332/1074747261478768692/1074747261478768692)
+v: 0
+micros:
+- name: funny_webapp
+  src: ./
+  engine: custom
+  primary: true
+  public: true
+  commands:
+    - apt-get update
+    - curl https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+    - curl https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list > /etc/apt/sources.list.d/dart_stable.list
+    - apt-get update
+    - apt-get install -y dart
+    - /usr/bin/dart pub get
+    - /usr/bin/dart compile aot-snapshot bin/server.dart -o bin/server.aot
+    - cp /usr/lib/dart/bin/dartaotruntime bin/
+  include:
+    - bin
+    - lib
+    - pages
+  run: ./bin/dartaotruntime ./bin/server.aot
+  dev: dart run bin/server.dart

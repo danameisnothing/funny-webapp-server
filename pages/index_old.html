@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lamb Radio Schedule thing i guess?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/style.css">
+  <script src="./assets/js/simple_utils.js" defer></script>
+  <script src="./assets/js/main.js" defer></script>
+</head>
+<body>
+  <!-- Use Monserrat Regular, Monserrat Bold -->
+  <div class="util_flex">
+    <div class="util_centered">
+      <h2>Lamb Radio Schedule thing i guess?</h2>
+    </div>
+    <div class="util_centered">
+      <p class="visible_while_loading util_italic_text">Loading...</p>
+      <p id="simple_error_display"></p>
+      <!-- This is only to get Firefox to work! -->
+      <small id="noscript_style"><strong><noscript>This site requires JavaScript to work. Please turn on JavaScript!</noscript></strong></small>
+    </div>
+    <div class="util_centered visible_after_load_complete">
+      <small><strong>Disclaimer: This website can be out&minus;of&minus;sync with the actual livestream for as much as 4 - 15 seconds</strong></small>
+      <small><small>(skill issue)</small></small>
+      <br><br>
+    </div>
+    <div class="util_centered util_inline">
+      <!-- so jank -->
+      <p class="visible_after_load_complete">Currently playing: <span id="curr_playing">NULL</span></p>
+    </div>
+    <div class="util_centered">
+      <h4 class="visible_after_load_complete">Upcoming songs:</h4>
+    </div>
+  </div>
+  <div class="util_centered visible_after_load_complete" id="upcoming_songs">
+  </div>
+  <br>
+  <div class="util_flex">
+    <a class="util_centered util_button visible_after_load_complete" id="reload_btn">Reload Stats</a>
+  </div>
+  <iframe class="util_invisible_display_none" src="https://lambradioupdater.glitch.me"></iframe>
+</body>
+</html>

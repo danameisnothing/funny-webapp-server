@@ -1,0 +1,88 @@
+h2, h4, p, small, a, span {
+  font-family: "Montserrat", sans-serif;
+}
+
+h2 {
+  font-weight: 700;
+}
+
+h4 {
+  font-weight: 600;
+}
+
+p, span {
+  font-weight: 400;
+}
+
+a {
+  font-weight: 500;
+}
+
+small {
+  font-weight: 300;
+  font-size: 0.8em;
+}
+
+#noscript_style {
+  color: red;
+}
+
+.util_centered {
+  margin: 0 auto;
+}
+
+.util_flex {
+  display: flex;
+  flex-direction: column;
+}
+
+.util_inline {
+  display: inline-flex;
+}
+
+.util_button {
+  background-color: black;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 7px;
+  user-select: none;
+}
+
+.util_button:hover {
+  background-color: #696969;
+  cursor: pointer;
+}
+
+.util_italic_text {
+  /* See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/i in the usage notes section (no. 2) */
+  font-style: italic;
+}
+
+.util_invisible_display_none {
+  display: none;
+}
+
+/* Actual styles */
+.music_schedule {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+}
+
+.last_updated_wrapper {
+  width: 90%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#upcoming_songs {
+  display: grid;
+  grid-template:
+  "a a a"
+  "b b b";
+  box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  width: 90%;
+  max-width: 1200px;
+}

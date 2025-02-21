@@ -1,0 +1,251 @@
+// Old code to get the length from the steam page (the data on Steam is inaccurate by quite a lot)
+/*Future<shelf.Response> musicInfoHandler(shelf.Request _) async {
+  // basically gets the first part of the full key (the collection id)
+  late http.Response cotlCacheResp;
+  try {
+    cotlCacheResp = await http.post(
+        Uri.parse(
+            "https://database.deta.sh/v1/${Platform.environment["DETA_PROJECT_KEY"]!.split("_")[0]}/steam_cotl_soundtrack_cache/query"),
+        headers: {"X-Api-Key": Platform.environment["DETA_PROJECT_KEY"]!});
+    if ((cotlCacheResp.statusCode / 100).floor() != 2) {
+      throw Exception("Target resource returned a non-2xx status code");
+    }
+  } catch (_) {
+    return shelf.Response(500,
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: jsonEncode({
+          "msg": "Unable to retrieve the cache data due to an unknown error"
+        }));
+  }
+
+  var cotlCacheJSON = jsonDecode(cotlCacheResp.body);
+  // Because it's guaranteed to be 0 or 1
+  // This returns the keys in alphabetical order, but screw it. Why not?
+  if (cotlCacheJSON["paging"]["size"] == 1) {
+    return shelf.Response(200,
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: jsonEncode({
+          "res": jsonDecode(cotlCacheJSON["items"][0]["music_cache_json_str"])
+        }));
+  }
+
+  late http.Response steamResp;
+  try {
+    steamResp = await http.get(Uri.parse(steamCotLSoundtrackURL));
+    if ((steamResp.statusCode / 100).floor() != 2) {
+      throw Exception("Target resource returned a non-2xx status code");
+    }
+  } catch (_) {
+    return shelf.Response(500,
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: jsonEncode({
+          "msg": "Unable to fetch the Steam HTML page due to an unknown error"
+        }));
+  }
+
+  final steamHTML = html.parse(steamResp.body);
+  final musicStatsContainer =
+      steamHTML.querySelector(".music_album_track_listing_table");
+
+  final Map<String, int> musicData = <String, int>{};
+
+  // Too lazy for error handling, ah well
+  for (final el in musicStatsContainer!.children) {
+    var durationData = el
+        .querySelector(".music_album_track_duration")!
+        .text
+        .trim(); // It has a bunch of \t and \n for some reason
+    musicData[
+            "${el.querySelector(".music_album_track_name")!.text} - River Boy"] =
+        Duration(
+                minutes: int.parse(durationData.substring(0, 1)),
+                seconds: int.parse(durationData.substring(2, 4)))
+            .inSeconds; // This is assuming the songs are not more than 9 minutes and 59 seconds (ah well)
+  }
+
+  late http.Response cotlPutCacheResp;
+  try {
+    cotlPutCacheResp = await http.post(
+        Uri.parse(
+            "https://database.deta.sh/v1/${Platform.environment["DETA_PROJECT_KEY"]!.split("_")[0]}/steam_cotl_soundtrack_cache/items"),
+        headers: {
+          "X-Api-Key": Platform.environment["DETA_PROJECT_KEY"]!,
+          "Content-Type": "application/json"
+        },
+        body: jsonEncode({
+          "item": {
+            "music_cache_json_str": jsonEncode(
+                musicData), // To preserve the order (the order is important!)
+            "__expires":
+                (DateTime.now().add(cotlCacheTime).millisecondsSinceEpoch /
+                        1000)
+                    .floor()
+          }
+        }));
+    if ((cotlPutCacheResp.statusCode / 100).floor() != 2) {
+      throw Exception("Target resource returned a non-2xx status code");
+    }
+  } catch (_) {
+    return shelf.Response(500,
+        headers: {"Content-Type": "application/json; charset=utf-8"},
+        body: jsonEncode({"msg": "Unable to put the music data to the cache"}));
+  }
+
+  return shelf.Response(200,
+      headers: {"Content-Type": "application/json; charset=utf-8"},
+      body: jsonEncode({"res": musicData}));
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import 'dart:convert';
+
+import 'package:shelf/shelf.dart' as shelf;
+
+import 'package:funny_webapp_server/app_constants.dart' as app_consts;
+
+// TODO: PROTECT THIS ENDPOINT!
+Future<shelf.Response> sendInfoHandler(shelf.Request req) async {
+  late Map<String, dynamic> reqBody;
+  try {
+    reqBody = jsonDecode((await req.readAsString()));
+  } catch (_) {
+    return shelf.Response(400,
+        headers: app_consts.defJSONHeader,
+        body: jsonEncode({"msg": "Bad Request"}));
+  }
+
+  // this OR is safe for somehow (the curr_playing without checking if it exists first)?
+  if (!reqBody.containsKey("curr_playing") ||
+      reqBody["curr_playing"] is! String ||
+      !reqBody.containsKey("music_info")) {
+    return shelf.Response(400,
+        headers: app_consts.defJSONHeader,
+        body: jsonEncode({"msg": "Bad Request"}));
+  }
+
+  // Test if a valid format of music_info is sent by the client
+  final Map<String, double> newMusicData = <String, double>{};
+  try {
+    reqBody["music_info"].forEach((k, v) {
+      if (k is! String || v is! double) {
+        throw Exception("Wrong music_info format");
+      }
+
+      newMusicData[k] = v;
+    });
+
+    // The above checks haven't prevented empty objects being set
+    if (newMusicData.isEmpty) {
+      throw Exception("Empty music_info sent");
+    }
+  } catch (_) {
+    return shelf.Response(400,
+        headers: app_consts.defJSONHeader,
+        body: jsonEncode({"msg": "Bad Request"}));
+  }
+
+  final Map<String, dynamic> radioCache =
+      await app_consts.latestRadioDB.query();
+  // Because it's guaranteed to be 0 or 1
+  // Check if we need to POST or PATCH the resource
+  if (radioCache["paging"]["size"] == 1) {
+    await app_consts.latestRadioDB.update(radioCache["items"][0]["key"], {
+      "set": {
+        "base_music": reqBody["curr_playing"],
+        "time": (DateTime.now().millisecondsSinceEpoch / 1000)
+            .toString() // See https://deta.space/docs/en/build/reference/deta-base#storing-numbers
+      }
+    });
+  } else {
+    await app_consts.latestRadioDB.insert({
+      "base_music": reqBody["curr_playing"],
+      "time": (DateTime.now().millisecondsSinceEpoch / 1000)
+          .toString() // See https://deta.space/docs/en/build/reference/deta-base#storing-numbers
+    });
+  }
+
+  // Put music in db
+  final Map<String, dynamic> musicCache =
+      await app_consts.steamCotLCacheDB.query();
+  // Because it's guaranteed to be 0 or 1
+  // Check if we need to POST or PATCH the resource
+  if (musicCache["paging"]["size"] == 1) {
+    await app_consts.steamCotLCacheDB.update(musicCache["items"][0]["key"], {
+      "set": {
+        "music_cache_json_str": jsonEncode(
+            newMusicData), // To preserve the order (the order is important! So, the jsonEncode is INTENTIONAL)
+      }
+    });
+  } else {
+    await app_consts.steamCotLCacheDB.insert({
+      "music_cache_json_str": jsonEncode(
+          newMusicData) // To preserve the order (the order is important! So, the jsonEncode is INTENTIONAL)
+    });
+  }
+
+  return shelf.Response(200,
+      headers: app_consts.defJSONHeader, body: jsonEncode({"msg": "Success"}));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+..get("/api/master/easter_egg", (shelf.Request _) async {
+    // Why not :)
+    final String baseURL = "https://api.buss.lol/domains?page=";
+    int currPage = 1;
+    final List<dynamic> allDomains = [];
+    while (true) {
+      http.Response resp = await http.get(Uri.parse("$baseURL$currPage"));
+      final Map<String, dynamic> json = jsonDecode(resp.body);
+      if (json["domains"].isEmpty) break;
+
+      allDomains.addAll(json["domains"].toList());
+      currPage++;
+    }
+
+    return shelf.Response.ok(
+        jsonEncode({"domains": allDomains, "total_page": --currPage}),
+        headers: app_consts.defJSONHeader);
+  })
