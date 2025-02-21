@@ -6,3 +6,4 @@
 dart-sdk/
 CUSTOM_README.txt
 dartsdk-linux-x64-release.zip
+watcher.dart
